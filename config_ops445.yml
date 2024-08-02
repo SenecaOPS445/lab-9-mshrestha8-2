@@ -1,0 +1,59 @@
+---
+- name: Configure of OPS445 VM
+  hosts: mshrestha8
+  user: student
+  become: yes
+  vars:
+    seneca_id: "mshrestha8"
+
+  tasks:
+    - name: Updating Apache (httpd)
+      yum:
+        name: httpd
+        state: latest
+
+    - name: Installing EPEL Repository
+      yum:
+        name: epel-release
+        state: present
+
+    - name: Removeing 'tree' package
+      yum:
+        name: tree
+        state: absent
+
+    - name: Set Hostname
+      hostname:
+        name: "{{ seneca_id }}"
+
+    - name: Creating a new user with sudo access
+      user:
+        name: "{{ seneca_id }}"
+        groups: wheel
+        append: yes
+
+    - name: Ensure .ssh directory exists for new user
+      file:
+        path: "/home/{{ seneca_id }}/.ssh"
+        state: directory
+        owner: "{{ seneca_id }}"
+        group: "{{ seneca_id }}"
+        mode: '0700'
+
+    - name: Configuring new user for SSH
+      copy:
+        src: "/home/{{ seneca_id }}/.ssh/id_rsa.pub"
+        dest: "/home/{{ seneca_id }}/.ssh/authorized_keys"
+        owner: "{{ seneca_id }}"
+        group: "{{ seneca_id }}"
+        mode: '0600'
+
+    - name: Directory structure Setup for labs
+      file:
+        path: "/home/{{ seneca_id }}/ops445/lab{{ item }}"
+        state: directory
+        owner: "{{ seneca_id }}"
+        group: "{{ seneca_id }}"
+        mode: '0755'
+      loop: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
